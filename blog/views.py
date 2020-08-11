@@ -4,6 +4,7 @@ from django.utils import timezone
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from .models import Post, Comment
 from .forms import PostModelForm, PostForm, CommentForm
 
@@ -74,9 +75,20 @@ def post_list(request):
     #     <p>웰컴 {name} !!!</p><p>{content}</p>'''.format(name=name, content=request.content))
 
     # QuerySet을 사용하여 DB에서 Post목록 가져오기
-    posts = Post.objects.filter(published_date__lte=timezone.now()).order_by('published_date')
+    # posts = Post.objects.filter(published_date__lte=timezone.now()).order_by('published_date')
+    # return render(request, 'blog/post_list.html', {'posts': posts})
 
+    post_list = Post.objects.filter(published_date__lte=timezone.now()).order_by('published_date')
+    paginator = Paginator(post_list, 2)
+    page = request.GET.get('page')
+    try:
+        posts = paginator.page(page)
+    except PageNotAnInteger:
+        posts = paginator.page(1)
+    except EmptyPage:
+        posts = paginator.page(paginator.num_pages)
     return render(request, 'blog/post_list.html', {'posts': posts})
+
 
 
 # Comment 등록
